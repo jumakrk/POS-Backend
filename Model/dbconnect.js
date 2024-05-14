@@ -32,7 +32,7 @@ db.sequelize.sync ({force:false})
 .then(()=>{
 console.log('re-sync done');
 })
-db.items = require( "./itemsModel.js")(sequelize, DataTypes);
-db.users = require( "./userModel.js")(sequelize, DataTypes);
+//db.items = require( "./itemsModel.js")(sequelize, DataTypes);
+db.users = require( "./authModel.js")(sequelize, DataTypes);
 
 module.exports = db;
