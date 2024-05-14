@@ -22,4 +22,14 @@ module.exports = {
         }
     },
 // http methods
+//get users from db
+getAllUsers: [isAdmin, async (req, res, next) => {
+    try {
+    const users = await User.findAll({});
+    res.status(200).send(users);
+    } catch (error) {
+    next(error);
+    }
+}],
+
 }
