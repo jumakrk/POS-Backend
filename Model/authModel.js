@@ -1,20 +1,20 @@
-module.exports = (sequelize, DataTypes) => {
-    const User = sequelize.define('user', {
-        user_id: {
-            type: DataTypes.INTEGER,
-            primaryKey: true,
-            autoIncrement: true,
-        },
-        email: {
+const bcrypt = require('bcrypt');
+module.exports=(sequelize, DataTypes) =>{
+    const user = sequelize.define('users', {
+
+        email:{
             type: DataTypes.STRING,
             allowNull: false,
-        },
-        password: {
+        },  
+        password:{
             type: DataTypes.STRING,
             allowNull: false,
-            validate: {
-                len: [6, 100] // Validate length of password
-            }
-        }
+        },  
+        role: {
+            type: DataTypes.ENUM('user', 'admin'),
+            allowNull: false,
+            defaultValue: 'user'
+        }      
     });
+
 }
