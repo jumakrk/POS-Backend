@@ -1,7 +1,5 @@
-const dbConfig = require("../config/dbConfig.js");
+const dbConfig = require("../config/dbConfig");
 const {Sequelize, DataTypes} = require("sequelize");
-
-const Sequelize = new Sequelize();
 
 const sequelize = new Sequelize(
             dbConfig.DB,
@@ -27,12 +25,14 @@ const sequelize = new Sequelize(
             db.Sequelize = Sequelize;
             db.sequelize = sequelize;
 
+            
+            
+
 db.sequelize.sync ({force:false})
 .then(()=>{
 console.log('re-sync done');
 })
-db.student = require( "./studentModel.js")(sequelize, DataTypes);
-db.courses = require( "./courseModel.js")(sequelize, DataTypes);
-db.users = require( "./authModel.js")(sequelize, DataTypes);
+db.items = require( "./itemsModel.js")(sequelize, DataTypes);
+db.users = require( "./userModel.js")(sequelize, DataTypes);
 
 module.exports = db;
