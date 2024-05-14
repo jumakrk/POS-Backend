@@ -17,10 +17,16 @@ module.exports=(sequelize, DataTypes) =>{
         }      
     });
 
-         // Before validating the user, convert email to lowercase
-user.beforeValidate((user, options) => {
+// Before validating the user, convert email to lowercase
+    user.beforeValidate((user, options) => {
     if (user.email) {
     user.email = user.email.toLowerCase();
     }
 });
+
+// Before creating a new user, hash the password
+    user.beforeCreate(async (user) => {
+        const hashedPassword = await bcrypt.hash(user.password, 10);
+        user.password = hashedPassword;
+    });
 }
