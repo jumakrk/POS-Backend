@@ -17,4 +17,10 @@ module.exports=(sequelize, DataTypes) =>{
         }      
     });
 
+         // Before validating the user, convert email to lowercase
+user.beforeValidate((user, options) => {
+    if (user.email) {
+    user.email = user.email.toLowerCase();
+    }
+});
 }
