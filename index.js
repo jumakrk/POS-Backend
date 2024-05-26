@@ -1,15 +1,15 @@
 const express = require('express');
 const app = express();
-const authRoute = require('./Routes/authRoute');
-// const itemsRoutes = require('./Routes/itemsRoute');
-// const bodyParser = require('body-parser');
-// const dashboardRoutes = require('./Routes/dashboardRoutes');
+const userRoutes = require('./routes/userRoutes');
+const itemsRoutes = require('./routes/itemsRoutes');
+const bodyParser = require('body-parser');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 const createError = require('http-errors');
 const cors = require('cors');
 const helmet = require('helmet');
 
 require('dotenv').config();
-require("./Model/dbConnect");
+require("./model/dbConnect");
 
 app.use(helmet());
 const corOptions = {
@@ -21,9 +21,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
-app.use('/api/user', authRoute);
-// app.use('/api/items', itemsRoutes);
-// app.use('./dashboard', dashboardRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/items', itemsRoutes);
+app.use('./dashboard', dashboardRoutes);
 
 // Handling 404 error
 app.use(async (req, res, next) => {
