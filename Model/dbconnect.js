@@ -1,4 +1,4 @@
-const dbConfig = require("../config/dbConfig");
+const dbConfig = require("../config/dbConfig.js");
 const {Sequelize, DataTypes} = require("sequelize");
 
 const sequelize = new Sequelize(
@@ -33,6 +33,6 @@ db.sequelize.sync ({force:false})
 console.log('re-sync done');
 })
 //db.items = require( "./itemsModel.js")(sequelize, DataTypes);
-db.users = require( "./authModel.js")(sequelize, DataTypes);
+db.users = require( "./userModel.js")(sequelize, DataTypes);
 
 module.exports = db;
