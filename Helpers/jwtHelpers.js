@@ -1,70 +1,44 @@
+const jwt = require('jsonwebtoken');
 const createError = require('http-errors');
-const JWT = require('jsonwebtoken');
 
-module.exports = {
-signAccessToken: (userId) => {
+const signAccessToken = (userId) => {
     return new Promise((resolve, reject) => {
-    const payload = { userId };
-    const secret = process.env.ACCESS_TOKEN_SECRET;
-    const options = {
-        expiresIn: '10m',
-        issuer: 'Clifford.com',
-        audience: userId.toString(),
-    };
-    JWT.sign(payload, secret, options, (error, token) => {
-        if (error) {
-        console.log(error.message);
-        reject(createError.InternalServerError());
-        }
-        resolve(token);
-    });
-    });
-},
+        const payload = { id: userId };
+        const secret = process.env.ACCESS_TOKEN_SECRET; // Ensure this is set
+        const options = {
+            expiresIn: '1h',
+            issuer: 'yourdomain.com',
+            audience: userId.toString(),
+        };
 
-verifyAccessToken: (req, res, next) => {
-    if (!req.headers['authorization']) return next(createError.Unauthorized());
-    const authHeader = req.headers['authorization'];
-    const bearerToken = authHeader.split(' ');
-    const token = bearerToken[1];
-    JWT.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, payload) => {
-    if (err) {
-        if (err.name === 'JsonWebTokenError') {
-        return next(createError.Unauthorized(err.message));
-        } else {
-        return next(createError.Unauthorized());
-        }
-    }
-    req.payload = payload;
-    next();
+        jwt.sign(payload, secret, options, (err, token) => {
+            if (err) {
+                console.error('JWT Sign Error:', err);
+                return reject(createError.InternalServerError('Token generation failed'));
+            }
+            resolve(token);
+        });
     });
-},
-
-signRefreshToken: (userId) => {
-    return new Promise((resolve, reject) => {
-    const payload = {};
-    const secret = process.env.REFRESH_TOKEN_SECRET;
-    const options = {
-        expiresIn: '1y',
-        issuer: 'Clifford.com',
-        audience: userId.toString(),
-    };
-    JWT.sign(payload, secret, options, (error, token) => {
-        if (error) {
-        console.log(error.message);
-        reject(createError.InternalServerError());
-        }
-        resolve(token);
-    });
-    });
-},
-
-verifyRefreshToken: (refreshToken) => {
-    return new Promise((resolve, reject) => {
-    JWT.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, payload) => {
-        if (err) return reject(createError.Unauthorized());
-        const userId = payload.aud;
-        resolve(userId.toString());
-    });
-    });
-},
 };
+
+const signRefreshToken = (userId) => {
+    return new Promise((resolve, reject) => {
+        const payload = { id: userId };
+        const secret = process.env.REFRESH_TOKEN_SECRET; // Ensure this is set
+        const options = {
+            expiresIn: '7d',
+            issuer: 'yourdomain.com',
+            audience: userId.toString(),
+        };
+
+        jwt.sign(payload, secret, options, (err, token) => {
+            if (err) {
+                console.error('JWT Refresh Sign Error:', err);
+                return reject(createError.InternalServerError('Refresh token generation failed'));
+            }
+            resolve(token);
+        });
+    });
+};
+
+module.exports = { signAccessToken, signRefreshToken };
