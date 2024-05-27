@@ -3,7 +3,6 @@ const app = express();
 const userRoutes = require('./routes/userRoutes');
 const itemsRoutes = require('./routes/itemsRoutes');
 const bodyParser = require('body-parser');
-const dashboardRoutes = require('./routes/dashboardRoutes');
 const createError = require('http-errors');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -12,18 +11,18 @@ require('dotenv').config();
 require("./model/dbConnect");
 
 app.use(helmet());
-const corOptions = {
+const corsOptions = {
     origin: 'http://localhost:3000',
-}
-app.use(cors(corOptions));
+};
+app.use(cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-
 app.use('/api/user', userRoutes);
 app.use('/api/items', itemsRoutes);
-app.use('./dashboard', dashboardRoutes);
+
+
 
 // Handling 404 error
 app.use(async (req, res, next) => {
@@ -51,6 +50,6 @@ app.use((err, req, res, next) => {
     }
 });
 
-app.listen(process.env.port || 4000, function () {
+app.listen(process.env.PORT || 4000, function () {
     console.log('Now listening for requests on: http://localhost:4000');
 });

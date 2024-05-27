@@ -1,10 +1,15 @@
 const bcrypt = require('bcrypt');
 module.exports=(sequelize, DataTypes) =>{
     const user = sequelize.define('users', {
-
-        email:{
+        username: {
             type: DataTypes.STRING,
             allowNull: false,
+            unique: true, // Ensure uniqueness of username
+        },
+        email: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            unique: true, // Ensure uniqueness of email
         },  
         password:{
             type: DataTypes.STRING,
@@ -17,25 +22,25 @@ module.exports=(sequelize, DataTypes) =>{
         }      
     });
 
-     // Before validating the user, convert email to lowercase
-user.beforeValidate((user, options) => {
-    if (user.email) {
-    user.email = user.email.toLowerCase();
-    }
-});
+    // Before validating the user, convert email to lowercase
+    user.beforeValidate((user, options) => {
+        if (user.email) {
+            user.email = user.email.toLowerCase();
+        }
+    });
 
     // Before creating a new user, hash the password
-user.beforeCreate(async (user) => {
-    const hashedPassword = await bcrypt.hash(user.password, 10);
-    user.password = hashedPassword;
-});
+    user.beforeCreate(async (user) => {
+        const hashedPassword = await bcrypt.hash(user.password, 10);
+        user.password = hashedPassword;
+    });
 
-  //   Compare the incoming password with the stored password
+    // Compare the incoming password with the stored password
     user.prototype.isValidPassword = async function (password) {
         try {
-            return  await bcrypt.compare(password, this.password);
+            return await bcrypt.compare(password, this.password);
         } catch (error) {
-            throw  error;
+            throw error;
         }
     };
     return user;

@@ -1,8 +1,16 @@
 const Joi = require('joi');
 
-const authSchema = Joi.object({
+// Registration schema
+const registerSchema = Joi.object({
+    username: Joi.string().min(4).max(30).required(),
     email: Joi.string().email().lowercase().required(),
-    password: Joi.string ().min(6).required(),
+    password: Joi.string().min(6).required(),
+})
+
+// Login schema
+const loginSchema = Joi.object({
+    email: Joi.string().email().lowercase().required(),
+    password: Joi.string().min(6).required(),
 })
 
 const vendorValidate = Joi.object({
@@ -11,6 +19,7 @@ const vendorValidate = Joi.object({
     price_Ksh: Joi.string().required(),
 })
 module.exports = {
-    authSchema,
+    registerSchema,
+    loginSchema,
     vendorValidate
 }
