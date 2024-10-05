@@ -77,9 +77,9 @@ module.exports = {
 
     loginUser: async (req, res, next) => {
         try {
-            const { email, password } = await loginSchema.validateAsync(req.body);
+            const { username, password } = await loginSchema.validateAsync(req.body);
 
-            const user = await User.findOne({ where: { email } });
+            const user = await User.findOne({ where: { username } });
             if (!user) {
                 throw createError.NotFound("User not registered");
             }
@@ -96,8 +96,14 @@ module.exports = {
         } catch (error) {
             console.error(error);
             if (error.isJoi === true) {
-                return next(createError.BadRequest('Invalid Email or Password'));
+                return next(createError.BadRequest('Invalid Username or Password'));
             }
+
+            // Ensure specific error message is passed
+        if (error.status === 404 || error.status === 401) {
+            return res.status(error.status).send({ message: error.message });
+        }
+
             next(error);
         }
     },
@@ -121,8 +127,8 @@ module.exports = {
 
     loginAdmin: async (req, res, next) => {
         try {
-            const { email, password } = await loginSchema.validateAsync(req.body);
-            const admin = await User.findOne({ where: { email, role: 'admin' } });
+            const { username, password } = await loginSchema.validateAsync(req.body);
+            const admin = await User.findOne({ where: { username, role: 'admin' } });
 
             if (!admin) {
                 throw createError.NotFound("Admin not registered");
@@ -130,7 +136,7 @@ module.exports = {
 
             const isMatch = await bcrypt.compare(password, admin.password);
             if (!isMatch) {
-                throw createError.Unauthorized('Invalid Email or Password');
+                throw createError.Unauthorized('Invalid Username or Password');
             }
 
             const accessToken = await signAccessToken(admin.id);
@@ -141,25 +147,11 @@ module.exports = {
             if (error.isJoi === true) {
                 return next(createError.BadRequest('Invalid Email or Password'));
             }
-            next(error);
+
+            // Ensure specific error message is passed
+        if (error.status === 404 || error.status === 401) {
+            return res.status(error.status).send({ message: error.message });
         }
-    },
-
-    resetAndUpdatePassword: async (req, res, next) => {
-        try {
-            const { email, newPassword } = req.body;
-            const user = await User.findOne({ where: { email } });
-
-            if (!user) {
-                throw createError.NotFound('User not found');
-            }
-
-            const hashedPassword = await bcrypt.hash(newPassword, 10);
-            user.password = hashedPassword;
-            await user.save();
-
-            res.status(200).send({ message: 'Password reset and updated successfully' });
-        } catch (error) {
             next(error);
         }
     },

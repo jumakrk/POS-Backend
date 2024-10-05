@@ -10,7 +10,6 @@ router.delete("/deleteUser/:id", userController.deleteUser);
 router.post('/loginUser', userController.loginUser);
 router.post('/registerAdmin', userController.registerAdmin);
 router.post('/loginAdmin', userController.loginAdmin);
-router.post('/resetAndUpdatePassword', userController.resetAndUpdatePassword);
 
 
 module.exports = router;
