@@ -8,7 +8,7 @@ signAccessToken: (userId) => {
     const secret = process.env.ACCESS_TOKEN_SECRET;
     const options = {
         expiresIn: '10m',
-        issuer: 'Owoko.com',
+        issuer: 'Jumakrk.com',
         audience: userId.toString(),
     };
     JWT.sign(payload, secret, options, (error, token) => {

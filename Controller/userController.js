@@ -110,7 +110,7 @@ module.exports = {
 
     registerAdmin: async (req, res, next) => {
         try {
-            const { email, password } = await registerSchema.validateAsync(req.body);
+            const { email, password } = await authSchema.validateAsync(req.body);
             const exists = await User.findOne({ where: { email } });
             if (exists) {
                 throw createError.Conflict(`${email} has already been registered`);
@@ -127,14 +127,14 @@ module.exports = {
 
     loginAdmin: async (req, res, next) => {
         try {
-            const { username, password } = await loginSchema.validateAsync(req.body);
-            const admin = await User.findOne({ where: { username, role: 'admin' } });
+            const result = await loginSchema.validateAsync(req.body);
+            const admin = await User.findOne({ where: { username: result.username, role: 'admin' } });
 
             if (!admin) {
                 throw createError.NotFound("Admin not registered");
             }
 
-            const isMatch = await bcrypt.compare(password, admin.password);
+            const isMatch = await admin.isValidPassword(result.p);
             if (!isMatch) {
                 throw createError.Unauthorized('Invalid Username or Password');
             }
