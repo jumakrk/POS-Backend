@@ -1,7 +1,8 @@
-module.exports = {
-    HOST: "localhost",
-    USER: "root",
-    PASSWORD:"",
-    DB: "pointofsaledb",
-    dialect: "mysql"
-  };
+module.exports={
+    HOST  :"localhost",
+    PORT : "4000",
+    USER: 'root',
+    PASSWORD :"",
+    DB: "pos_system",
+    dialect: "mysql"    
+};

@@ -10,149 +10,169 @@ const User = db.users;
 module.exports = {
     addUser: async (req, res, next) => {
         try {
-            const { username, email, password } = await registerSchema.validateAsync(req.body);
-
+            // Extract username, email, and password from the request body
+            const { username, email, password } = await  registerSchema.validateAsync(req.body);
+    
+            // Check if the email already exists in the database
             const emailExists = await User.findOne({ where: { email } });
             if (emailExists) {
                 throw createError.Conflict(`${email} has already been registered`);
             }
-
+    
+            // Check if the username already exists in the database
             const usernameExists = await User.findOne({ where: { username } });
             if (usernameExists) {
                 throw createError.Conflict(`${username} has already been taken`);
             }
-
-            const hashedPassword = await bcrypt.hash(password, 10);
-            const newUser = await User.create({ username, email, password: hashedPassword });
-
-            const accessToken = await signAccessToken(newUser.id);
-
-            res.status(201).send({ accessToken });
+    
+            // Create a new user instance with the provided data
+            const newUser = new User({ username, email, password });
+    
+            // Save the new user to the database
+            const savedUser = await newUser.save();
+    
+            // Generate an access token for the user (assuming you have a function for this)
+            const accessToken = await signAccessToken(savedUser.id);
+    
+            // Send the access token in the response
+            res.status(200).send({ accessToken });
         } catch (error) {
             console.error(error);
             if (error.isJoi === true) error.status = 422;
             next(error);
         }
     },
+    
+getAllUsers: [isAdmin, async (req, res, next) => {
+    try {
+    const users = await User.findAll({});
+    res.status(200).send(users);
+    } catch (error) {
+    next(error);
+    }
+}],
+updateUser: async (req, res, next) => {
+    try {
+    const userId = req.params.id;
+    const userData = req.body;
+    
+    if (req.user.role !== 'admin') {
+        throw createError.Unauthorized('Only admins can update users.');
+    }
 
-    getAllUsers: [isAdmin, async (req, res, next) => {
-        try {
-            const users = await User.findAll({});
-            res.status(200).send(users);
-        } catch (error) {
-            next(error);
-        }
-    }],
+    await User.update(userData, { where: { id: userId } });
+    res.status(200).send({ message: 'User updated successfully' });
+    } catch (error) {
+    next(error);
+    }
+},
+deleteUser: async (req, res, next) => {
+    try {
+    const userId = req.params.id;
+    
+    if (req.user.role !== 'admin') {
+        throw createError.Unauthorized('Only admins can delete users.');
+    }
 
-    updateUser: async (req, res, next) => {
-        try {
-            const userId = req.params.id;
-            const userData = req.body;
+    await User.destroy({ where: { id: userId } });
+    res.status(200).send({ message: 'User deleted successfully' });
+    } catch (error) {
+    next(error);
+    }
+},
+loginUser: async (req, res, next) => {
+    try {
+        const { email, password } = await loginSchema.validateAsync(req.body);
 
-            if (req.user.role !== 'admin') {
-                throw createError.Unauthorized('Only admins can update users.');
-            }
+        // Find user by email in the database
+        const user = await User.findOne({ where: { email } });
 
-            await User.update(userData, { where: { id: userId } });
-            res.status(200).send({ message: 'User updated successfully' });
-        } catch (error) {
-            next(error);
-        }
-    },
-
-    deleteUser: async (req, res, next) => {
-        try {
-            const userId = req.params.id;
-
-            if (req.user.role !== 'admin') {
-                throw createError.Unauthorized('Only admins can delete users.');
-            }
-
-            await User.destroy({ where: { id: userId } });
-            res.status(200).send({ message: 'User deleted successfully' });
-        } catch (error) {
-            next(error);
-        }
-    },
-
-    loginUser: async (req, res, next) => {
-        try {
-            const { username, password } = await loginSchema.validateAsync(req.body);
-
-            const user = await User.findOne({ where: { username } });
-            if (!user) {
-                throw createError.NotFound("User not registered");
-            }
-
-            const isMatch = await bcrypt.compare(password, user.password);
-            if (!isMatch) {
-                throw createError.Unauthorized('Invalid Email or Password');
-            }
-
-            const accessToken = await signAccessToken(user.id);
-            const refreshToken = await signRefreshToken(user.id);
-
-            res.send({ accessToken, refreshToken });
-        } catch (error) {
-            console.error(error);
-            if (error.isJoi === true) {
-                return next(createError.BadRequest('Invalid Username or Password'));
-            }
-
-            // Ensure specific error message is passed
-        if (error.status === 404 || error.status === 401) {
-            return res.status(error.status).send({ message: error.message });
+        // If user doesn't exist, return error
+        if (!user) {
+            throw createError.NotFound("User not registered");
         }
 
-            next(error);
+        // Verify password
+        const isMatch = await user.isValidPassword(password);
+        if (!isMatch) {
+            throw createError.Unauthorized('Invalid Email or Password');
         }
-    },
 
-    registerAdmin: async (req, res, next) => {
-        try {
-            const { email, password } = await authSchema.validateAsync(req.body);
-            const exists = await User.findOne({ where: { email } });
-            if (exists) {
-                throw createError.Conflict(`${email} has already been registered`);
-            }
-            const hashedPassword = await bcrypt.hash(password, 10);
-            const newAdmin = await User.create({ email, password: hashedPassword, role: 'admin' });
-            const accessToken = await signAccessToken(newAdmin.id);
-            res.status(201).send({ accessToken });
-        } catch (error) {
-            if (error.isJoi === true) error.status = 422;
-            next(error);
+        // If password is correct, generate tokens
+        const accessToken = await signAccessToken(user.id);
+        const refreshToken = await signRefreshToken(user.id);
+
+        res.send({ accessToken, refreshToken });
+    } catch (error) {
+        console.error(error);
+        if (error.isJoi === true) {
+            return next(createError.BadRequest('Invalid Email or Password'));
         }
-    },
+        next(error);
+    }
+},
 
-    loginAdmin: async (req, res, next) => {
-        try {
-            const result = await loginSchema.validateAsync(req.body);
-            const admin = await User.findOne({ where: { username: result.username, role: 'admin' } });
+registerAdmin: async (req, res, next) => {
+    try {
+    const { email, password } = await authSchema.validateAsync(req.body);
+    const exists = await User.findOne({ where: { email } });
+    if (exists) {
+        throw createError.Conflict(`${email} has already been registered`);
+    }
+    const newAdmin = new User({ email, password, role: 'admin' });
+    const savedAdmin = await newAdmin.save();
 
-            if (!admin) {
-                throw createError.NotFound("Admin not registered");
-            }
+      const accessToken = await signAccessToken(savedAdmin.id); // Assuming ID is accessible directly
+    res.status(200).send({ accessToken });
+    } catch (error) {
+    if (error.isJoi === true) error.status = 422;
+    next(error);
+    }
+},
+loginAdmin: async (req, res, next) => {
+    try {
+    const result = await authSchema.validateAsync(req.body);
+    const admin = await User.findOne({ where: { email: result.email, role: 'admin' } });
+    
+    if (!admin)
+        throw createError.NotFound("Admin not registered");
+    
+      // Matching the password
+    const isMatch = await admin.isValidPassword(result.password);
+    if (!isMatch)
+        throw createError.Unauthorized('Invalid Email or Password');
 
-            const isMatch = await admin.isValidPassword(result.p);
-            if (!isMatch) {
-                throw createError.Unauthorized('Invalid Username or Password');
-            }
+      // If password matches then generate token
+    const accessToken = await signAccessToken(admin.id);
+    const refreshToken = await signRefreshToken(admin.id);
+    
+    res.send({ accessToken, refreshToken });
+    } catch (error) {
+    if (error.isJoi === true)
+        return next(createError.BadRequest('Invalid Email or Password'));
+    next(error);
+    }
+},
 
-            const accessToken = await signAccessToken(admin.id);
-            const refreshToken = await signRefreshToken(admin.id);
+resetAndUpdatePassword: async (req, res, next) => {
+    try {
+        const { email, newPassword } = req.body;
+        const user = await User.findOne({ where: { email } });
 
-            res.send({ accessToken, refreshToken });
-        } catch (error) {
-            if (error.isJoi === true) {
-                return next(createError.BadRequest('Invalid Email or Password'));
-            }
-
-            // Ensure specific error message is passed
-        if (error.status === 404 || error.status === 401) {
-            return res.status(error.status).send({ message: error.message });
+        if (!user) {
+            throw createError.NotFound('User not found');
         }
-            next(error);
-        }
-    },
+
+        // Hash the new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update the user's password with the hashed password
+        user.password = hashedPassword;
+        await user.save();
+
+        res.status(200).send({ message: 'Password reset and updated successfully' });
+    } catch (error) {
+        next(error);
+    }
+},
 };

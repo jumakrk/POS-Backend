@@ -8,7 +8,7 @@ signAccessToken: (userId) => {
     const secret = process.env.ACCESS_TOKEN_SECRET;
     const options = {
         expiresIn: '10m',
-        issuer: 'Jumakrk.com',
+        issuer: 'Owoko.com',
         audience: userId.toString(),
     };
     JWT.sign(payload, secret, options, (error, token) => {
@@ -45,7 +45,7 @@ signRefreshToken: (userId) => {
     const secret = process.env.REFRESH_TOKEN_SECRET;
     const options = {
         expiresIn: '1y',
-        issuer: 'Jumakrk.com',
+        issuer: 'Owoko.com',
         audience: userId.toString(),
     };
     JWT.sign(payload, secret, options, (error, token) => {

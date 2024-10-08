@@ -7,7 +7,8 @@ const  router=express.Router();
 router.post("/addItem", itemsController.addItem);
 router.get("/getAllItems", itemsController.getAllItems);
 router.get("/getItem/:item_id", itemsController.getItem);
-router.patch("/updateItem/:id", itemsController.updateItem);
+router.patch('/updateItem/:item_id', itemsController.updateItem);
+router.delete('/deleteItem/:id', itemsController.deleteItem);
 router.post("/makeSale", itemsController.makeSale);
 
 
